@@ -2,9 +2,11 @@ const express = require("express");
 const app = express();
 const fs = require("fs");
 const path = require("path");
-const serialize = require('serialize-javascript');
-const { createBundleRenderer } = require('vue-server-renderer');
-const isProd = typeof process.env.NODE_ENV !== 'undefined' && (process.env.NODE_ENV === 'production')
+const serialize = require("serialize-javascript");
+const { createBundleRenderer } = require("vue-server-renderer");
+const isProd =
+  typeof process.env.NODE_ENV !== "undefined" &&
+  process.env.NODE_ENV === "production";
 let renderer;
 
 const indexHTML = (() => {
@@ -18,11 +20,11 @@ if (isProd) {
 }
 
 if (isProd) {
-  const bundlePath = path.resolve(__dirname, './dist/server/main.js')
-  renderer = createBundleRenderer(fs.readFileSync(bundlePath, 'utf-8'))
+  const bundlePath = path.resolve(__dirname, "./dist/server/main.js");
+  renderer = createBundleRenderer(fs.readFileSync(bundlePath, "utf-8"));
 } else {
-  require("./build/dev-server")(app, bundle => {
-    renderer = createBundleRenderer(bundle)
+  require("./build/dev-server")(app, (bundle) => {
+    renderer = createBundleRenderer(bundle);
   });
 }
 
@@ -30,14 +32,18 @@ app.get("*", (req, res) => {
   const context = { url: req.url };
   renderer.renderToString(context, (err, html) => {
     if (err) {
-      return res.status(500).send('Server Error')
+      return res.status(500).send("Server Error");
     }
-    html = indexHTML.replace('{{ APP }}', html)
-    html = html.replace('{{ STATE }}',
-    `<script>window.__INITIAL_STATE__=${serialize(context.initialState, { isJSON: true })}</script>`)
+    html = indexHTML.replace("{{ APP }}", html);
+    html = html.replace(
+      "{{ STATE }}",
+      `<script>window.__INITIAL_STATE__=${serialize(context.initialState, {
+        isJSON: true,
+      })}</script>`,
+    );
     res.write(html);
     res.end();
-  })
+  });
 });
 
 const port = process.env.PORT || 3000;
